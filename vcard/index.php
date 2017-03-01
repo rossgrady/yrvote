@@ -1,7 +1,6 @@
 <?php
 require '../vendor/autoload.php';
 
-include("../parser.php");
 $parser = new FullNameParser();
 #error_reporting(E_ALL);
 #ini_set('display_errors', 'On');

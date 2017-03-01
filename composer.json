@@ -1,5 +1,10 @@
 {
+    "minimum-stability": "dev",
+    "prefer-stable": true,
     "require": {
         "giggsey/libphonenumber-for-php": "^8.3"
+    },
+    "require-dev": {
+        "joshfraser/php-name-parser": "dev-master"
     }
 }
