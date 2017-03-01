@@ -196,7 +196,7 @@ $newoffice = $newoffice . '</div></div></div>';
 </div></div>
 <div class="padding"></div>
 <footer class="footer">
-    <div class="container"><p class="footer-text">Built by <a href="https://twitter.com/rossgrady">@rossgrady</a></p>
+<div class="container"><p class="footer-text">Built by <a href="https://twitter.com/rossgrady">@rossgrady</a>. &nbsp; &nbsp; Data: <a href="https://developers.google.com/civic-information/">Google</a>.</p>
     </div>
     </footer>
 </body>
