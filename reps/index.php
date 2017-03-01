@@ -6,19 +6,34 @@
         <title>They're YOUR Reps</title>
     <link href="https://fonts.googleapis.com/css?family=Alfa+Slab+One" rel="stylesheet">
     <script
-  src="https://code.jquery.com/jquery-3.1.1.min.js"
-  integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
-  crossorigin="anonymous"></script>
-     <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
-<!-- Latest compiled and minified CSS -->
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+      src="https://code.jquery.com/jquery-3.1.1.min.js"
+      integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
+      crossorigin="anonymous">
+    </script>
+    <script 
+      src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" 
+      integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" 
+      crossorigin="anonymous">
+    </script>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" 
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" 
+      integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" 
+      crossorigin="anonymous">
 
-<!-- Optional theme -->
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+    <!-- Optional theme -->
+    <link rel="stylesheet" 
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" 
+      integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" 
+      crossorigin="anonymous">
 
-<!-- Latest compiled and minified JavaScript -->
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
-        <link type="text/css" rel="stylesheet"  href="/css/style.css">
+    <!-- Latest compiled and minified JavaScript -->
+    <script 
+      src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" 
+      integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" 
+      crossorigin="anonymous">
+    </script>
+    <link type="text/css" rel="stylesheet"  href="/css/style.css">
     </head>
 <body>
 <?php
@@ -26,9 +41,10 @@ require '../vendor/autoload.php';
 #error_reporting(E_ALL);
 #ini_set('display_errors', 'On');
 
-$api_url = "https://www.googleapis.com/civicinfo/v2/representatives?roles=legislatorLowerBody&roles=legislatorUpperBody&key=AIzaSyCgsGoD46_KtQmEQ2TMJuM5XtfmbQBdC1s&address=";
-// var api_url = "https://www.googleapis.com/civicinfo/v2/representatives?key=AIzaSyCgsGoD46_KtQmEQ2TMJuM5XtfmbQBdC1s&address=";
+$goog_url = "https://www.googleapis.com/civicinfo/v2/representatives?roles=legislatorLowerBody&roles=legislatorUpperBody&key=AIzaSyCgsGoD46_KtQmEQ2TMJuM5XtfmbQBdC1s&address=";
+// $goog_url = "https://www.googleapis.com/civicinfo/v2/representatives?key=AIzaSyCgsGoD46_KtQmEQ2TMJuM5XtfmbQBdC1s&address=";
 
+$openstates_url = "https://openstates.org/api/v1/legislators/geo/";
 
 function getData($url, $headers){
   $curl = curl_init();
@@ -45,23 +61,27 @@ function getData($url, $headers){
   return $response;
 };
 
+// go get the initial set of data from Google's Civic Information API:
 $google_headers = array();
-
 $niceaddr = $_GET['address'];
-
 $addr = urlencode($niceaddr);
+$full_goog_url = $goog_url . $addr;
+$goog_response = getData($full_goog_url, $google_headers);
+$data = json_decode($goog_response);
+//print "<pre>";
+//print_r($data);
+//print "</pre>";
 
-$full_url = $api_url . $addr;
-
-#print $full_url;
-
-$simple = getData($full_url, $google_headers);
-
-#print $simple."<BR><BR>\n\n";
-
-$data = json_decode($simple);
-
-#print_r($data);
+// now pull in state-level information from the openstates API:
+$openstates_headers = array();
+$latitude = $_GET['lat'];
+$longitude = $_GET['lng'];
+$full_openstates_url = $openstates_url . "?lat=" . $latitude . "&long=" . $longitude;
+$openstates_response = getData($full_openstates_url, $openstates_headers);
+$osdata = json_decode($openstates_response);
+//print "<pre>";
+//print_r($osdata);
+//print "</pre>";
 
 print 	'<div class="bd-pageheader">' .
 	'<div class="title"><a href="/">They\'re YOUR Reps</a></div>'.

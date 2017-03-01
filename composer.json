@@ -2,7 +2,8 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "require": {
-        "giggsey/libphonenumber-for-php": "^8.3"
+        "giggsey/libphonenumber-for-php": "^8.3",
+        "viison/address-splitter": "^0.2.2"
     },
     "require-dev": {
         "joshfraser/php-name-parser": "dev-master"
