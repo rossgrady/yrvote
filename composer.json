@@ -3,9 +3,7 @@
     "prefer-stable": true,
     "require": {
         "giggsey/libphonenumber-for-php": "^8.3",
-        "viison/address-splitter": "^0.2.2"
-    },
-    "require-dev": {
+        "viison/address-splitter": "^0.2.2",
         "joshfraser/php-name-parser": "dev-master"
     }
 }

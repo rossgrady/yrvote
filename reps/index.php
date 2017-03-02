@@ -37,9 +37,10 @@
     </head>
 <body>
 <?php
-require '../vendor/autoload.php';
 #error_reporting(E_ALL);
 #ini_set('display_errors', 'On');
+
+require '../vendor/autoload.php';
 
 $goog_url = "https://www.googleapis.com/civicinfo/v2/representatives?roles=legislatorLowerBody&roles=legislatorUpperBody&key=AIzaSyCgsGoD46_KtQmEQ2TMJuM5XtfmbQBdC1s&address=";
 // $goog_url = "https://www.googleapis.com/civicinfo/v2/representatives?key=AIzaSyCgsGoD46_KtQmEQ2TMJuM5XtfmbQBdC1s&address=";
@@ -82,6 +83,67 @@ $osdata = json_decode($openstates_response);
 //print "<pre>";
 //print_r($osdata);
 //print "</pre>";
+
+
+function parseGoog($gdata_official){
+  // takes in a single official array element from google's data
+  $newOfficial = new stdClass();
+  // the name
+  $newOfficial->full_name = $gdata_official->name;
+  $parser = new FullNameParser();
+  $name = $parser->parse_name($gdata_official->name);
+  $newOfficial->last_name = $name['lname'];
+  $newOfficial->first_name = $name['fname'];
+  $newOfficial->middle_name = $name['initials'];
+  $newOfficial->suffixes = $name['suffix'];
+  $newOfficial->salutation = $name['salutation'];
+  // party
+  $newOfficial->party = $gdata_official->party;
+  // photo
+  $newOfficial->photo_url = $gdata_official->photoUrl;
+  // phones
+  $newOfficial->phones = $gdata_official->phones;
+  // urls
+  $newOfficial->urls = $gdata_official->urls;
+  // emails
+  $newOfficial->emails = $gdata_official->emails;
+  // social media channels
+  $newOfficial->channels = $gdata_official->channels;
+  // addresses
+  $newOfficial->addresses = $gdata_official->address;
+
+  return $newOfficial;
+};
+
+
+$mergedOfficials = array();
+
+foreach($data->offices as $office){
+  foreach($office->officialIndices as $index){
+    $newofficial = parseGoog($data->officials[$index]);
+    $newindex = array_push($mergedOfficials, $newofficial);
+    $office->newIndices[] = $newindex - 1;
+  }
+}
+
+print "<pre>";
+print_r($data->offices);
+print "</pre>";
+
+print "<pre>";
+print_r($data->officials);
+print "</pre>";
+
+print "<pre>";
+print_r($mergedOfficials);
+print "</pre>";
+
+function parseOpen($odata_official, &$tgtarray){
+// takes in a single official array element from openstates' data
+
+};
+
+
 
 print 	'<div class="bd-pageheader">' .
 	'<div class="title"><a href="/">They\'re YOUR Reps</a></div>'.
