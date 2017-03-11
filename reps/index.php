@@ -37,8 +37,8 @@
     </head>
 <body>
 <?php
-#error_reporting(E_ALL);
-#ini_set('display_errors', 'On');
+//error_reporting(E_ALL);
+// ini_set('display_errors', 'On');
 
 require '../vendor/autoload.php';
 
@@ -62,6 +62,12 @@ function getData($url, $headers){
   return $response;
 };
 
+function prettyPrint(&$data){
+  print "<pre>";
+  print_r($data);
+  print "</pre>";
+};
+
 // go get the initial set of data from Google's Civic Information API:
 $google_headers = array();
 $niceaddr = $_GET['address'];
@@ -69,9 +75,6 @@ $addr = urlencode($niceaddr);
 $full_goog_url = $goog_url . $addr;
 $goog_response = getData($full_goog_url, $google_headers);
 $data = json_decode($goog_response);
-//print "<pre>";
-//print_r($data);
-//print "</pre>";
 
 // now pull in state-level information from the openstates API:
 $openstates_headers = array();
@@ -80,9 +83,6 @@ $longitude = $_GET['lng'];
 $full_openstates_url = $openstates_url . "?lat=" . $latitude . "&long=" . $longitude;
 $openstates_response = getData($full_openstates_url, $openstates_headers);
 $osdata = json_decode($openstates_response);
-//print "<pre>";
-//print_r($osdata);
-//print "</pre>";
 
 
 function parseGoog($gdata_official){
@@ -96,7 +96,6 @@ function parseGoog($gdata_official){
   $newOfficial->first_name = $name['fname'];
   $newOfficial->middle_name = $name['initials'];
   $newOfficial->suffixes = $name['suffix'];
-  $newOfficial->salutation = $name['salutation'];
   // party
   $newOfficial->party = $gdata_official->party;
   // photo
@@ -119,31 +118,78 @@ function parseGoog($gdata_official){
 $mergedOfficials = array();
 
 foreach($data->offices as $office){
+  $divisionId = $office->divisionId;
   foreach($office->officialIndices as $index){
     $newofficial = parseGoog($data->officials[$index]);
+    $newofficial->division = $divisionId;
     $newindex = array_push($mergedOfficials, $newofficial);
     $office->newIndices[] = $newindex - 1;
   }
 }
 
-print "<pre>";
-print_r($data->offices);
-print "</pre>";
 
-print "<pre>";
-print_r($data->officials);
-print "</pre>";
-
-print "<pre>";
-print_r($mergedOfficials);
-print "</pre>";
-
-function parseOpen($odata_official, &$tgtarray){
+function parseOpen($odata_official){
 // takes in a single official array element from openstates' data
-
+  $newOfficial = new stdClass();
+  // the name
+  $newOfficial->full_name = $odata_official->full_name;
+  $newOfficial->last_name = $odata_official->last_name;
+  $newOfficial->first_name = $odata_official->first_name;
+  $newOfficial->middle_name = $odata_official->middle_name;
+  $newOfficial->suffixes = $odata_official->suffixes;
+  // openstates ID
+  $newOfficial->osID = $odata_official->id;
+  // division
+  $newOfficial->division = $odata_official->boundary_id;
+  // party
+  $newOfficial->party = $odata_official->party;
+  // photo
+  $newOfficial->photo_url = $odata_official->photo_url;
+  // gotta extract stuff from the offices array
+  $newOfficial->addresses = array();
+  $newOfficial->phones = array();
+  $newOfficial->urls = array();
+  $newOfficial->emails = array();
+  foreach($odata_official->offices as $office){
+    $newAddress = new stdClass();
+    $newAddress->locationName = $office->name;
+    $matches = array();
+    $pattern = "/(?<line1>.+)\n?(?<line2>.*)[,\n]+(?<city>[\s\w\.\-]+)[,\s]+(?<state>[A-Z]{2})[\s]+(?<zip>[0-9\-]+)$/";
+    preg_match($pattern, $office->address, $matches);
+    $newAddress->line1 = $matches['line1'];
+    if($matches['line2'] !== ""){
+      $newAddress->line2 = $matches['line2'];
+    };
+    $newAddress->city = ltrim($matches['city']);
+    $newAddress->state = $matches['state'];
+    $newAddress->zip = $matches['zip'];
+    array_push($newOfficial->addresses, $newAddress);
+    if($office->phone !== null && !in_array($office->phone, $newOfficial->phones)){
+      array_push($newOfficial->phones, $office->phone);
+    };
+    if($office->email !== null && !in_array($office->email, $newOfficial->emails)){
+      array_push($newOfficial->emails, $office->email);
+    };
+  };
+  // urls
+    if($odata_official->url !== null && !in_array($odata_official->url, $newOfficial->urls)){
+      array_push($newOfficial->urls, $odata_official->url);
+    };
+  // emails
+    if($odata_official->email !== null && !in_array($odata_official->email, $newOfficial->emails)){
+      array_push($newOfficial->emails, $odata_official->email);
+    };
+  return $newOfficial;
 };
 
 
+foreach($osdata as $official){
+    $newofficial = parseOpen($official);
+    $newindex = array_push($mergedOfficials, $newofficial);
+//  now here goes the logic to selectively replace stuff in the master list, or whatever
+}
+
+prettyPrint($mergedOfficials);
 
 print 	'<div class="bd-pageheader">' .
 	'<div class="title"><a href="/">They\'re YOUR Reps</a></div>'.
